@@ -4,8 +4,6 @@
 /common/build/
 /fabric/.gradle/
 /fabric/build/
-/neoforge/.gradle/
-/neoforge/build/
 /.idea/
 /fabric-like/build/
 /fabric-like/.gradle/
@@ -13,5 +11,4 @@
 /forge/.gradle/
 /build/
 /fabric/run
-/neoforge/run
 /forge/run

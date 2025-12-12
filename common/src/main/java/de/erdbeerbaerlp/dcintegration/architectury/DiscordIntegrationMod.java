@@ -253,7 +253,7 @@ public final class DiscordIntegrationMod {
         }
 
         final PlayerChatMessage finalMessage = message;
-        final MessageEmbed embed = MessageUtilsImpl.genItemStackEmbedIfAvailable(message.decoratedContent(), player.level());
+        final MessageEmbed embed = MessageUtilsImpl.genItemStackEmbedIfAvailable(message.decoratedContent());
         if (DiscordIntegration.INSTANCE != null) {
             String text = message.decoratedContent().getString();
             if (DiscordIntegration.INSTANCE.callEvent((e) -> {

@@ -28,7 +28,7 @@ configurations {
     }
 }
 repositories {
-        maven {
+    maven {
         name = "Modrinth"
         url = "https://api.modrinth.com/maven"
         content {
@@ -102,6 +102,9 @@ remapJar {
 }
 
 configurations.all {
+    exclude group: "net.fabricmc", module: "fabric-loader"
+    exclude group: "net.fabricmc.fabric-api"
+
     resolutionStrategy.eachDependency {
         if (requested.group == "com.google.guava" && requested.name == "guava") {
             useTarget("com.google.guava:guava:33.3.1-jre")

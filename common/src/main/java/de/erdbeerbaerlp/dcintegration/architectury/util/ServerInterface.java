@@ -1,5 +1,6 @@
 package de.erdbeerbaerlp.dcintegration.architectury.util;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dcshadow.com.vdurmont.emoji.EmojiParser;
 import dcshadow.net.kyori.adventure.text.Component;
@@ -171,7 +172,15 @@ public class ServerInterface implements McServerInterface {
 
     @Override
     public String getNameFromUUID(UUID uuid) {
-        return server.services().profileResolver().fetchById(uuid).orElseThrow().name();
+        ServerPlayer online = server.getPlayerList().getPlayer(uuid);
+        if (online != null) {
+            return online.getGameProfile().getName();
+        }
+
+        return server.getProfileCache()
+                .get(uuid)
+                .map(GameProfile::getName)
+                .orElse(uuid.toString());
     }
 
     @Override

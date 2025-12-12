@@ -10,7 +10,6 @@ import de.erdbeerbaerlp.dcintegration.common.storage.linking.LinkManager;
 import de.erdbeerbaerlp.dcintegration.common.util.DiscordMessage;
 import de.erdbeerbaerlp.dcintegration.common.util.TextColors;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
@@ -33,8 +32,7 @@ public class NetworkHandlerMixin {
      * Handle possible timeout
      */
     @Inject(method = "onDisconnect", at = @At("HEAD"))
-    private void onDisconnect(DisconnectionDetails disconnectionDetails, CallbackInfo ci) {
-        final Component reason = disconnectionDetails.reason();
+    private void onDisconnect(Component reason, CallbackInfo ci) {
         if (DiscordIntegrationMod.stopped) return; //Try to fix player leave messages after stop!
         if(INSTANCE.getServerInterface().isPlayerVanish(player.getUUID())) return;
         if (LinkManager.isPlayerLinked(player.getUUID()) && LinkManager.getLink(null, player.getUUID()).settings.hideFromDiscord) {

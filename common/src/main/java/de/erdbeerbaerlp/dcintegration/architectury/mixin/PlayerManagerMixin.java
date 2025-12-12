@@ -20,8 +20,6 @@ import net.dv8tion.jda.api.entities.Role;
 import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.network.Connection;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
-import net.minecraft.server.players.NameAndId;
 import net.minecraft.server.players.PlayerList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -42,10 +40,10 @@ public class PlayerManagerMixin {
      * Handle whitelisting
      */
     @Inject(method = "canPlayerLogin", at = @At("HEAD"), cancellable = true)
-    public void canJoin(SocketAddress socketAddress, NameAndId nameAndId, CallbackInfoReturnable<net.minecraft.network.chat.Component> cir) {
+    public void canJoin(SocketAddress socketAddress, GameProfile profile, CallbackInfoReturnable<net.minecraft.network.chat.Component> cir) {
         if (DiscordIntegration.INSTANCE == null) return;
-        LinkManager.checkGlobalAPI(nameAndId.id());
-        final Component eventKick = INSTANCE.callEventO((e) -> e.onPlayerJoin(nameAndId.id()));
+        LinkManager.checkGlobalAPI(profile.getId());
+        final Component eventKick = INSTANCE.callEventO((e) -> e.onPlayerJoin(profile.getId()));
         if (eventKick != null) {
             final String jsonComp = GsonComponentSerializer.gson().serialize(eventKick).replace("\\\\n", "\n");
             try {
@@ -57,9 +55,9 @@ public class PlayerManagerMixin {
         }
         if (Configuration.instance().linking.whitelistMode && DiscordIntegration.INSTANCE.getServerInterface().isOnlineMode()) {
             try {
-                if (!LinkManager.isPlayerLinked(nameAndId.id())) {
-                    cir.setReturnValue(net.minecraft.network.chat.Component.literal(Localization.instance().linking.notWhitelistedCode.replace("%code%", "" + (FloodgateUtils.isBedrockPlayer(nameAndId.id()) ? LinkManager.genBedrockLinkNumber(nameAndId.id()) : LinkManager.genLinkNumber(nameAndId.id())))));
-                } else if (!DiscordIntegration.INSTANCE.canPlayerJoin(nameAndId.id())) {
+                if (!LinkManager.isPlayerLinked(profile.getId())) {
+                    cir.setReturnValue(net.minecraft.network.chat.Component.literal(Localization.instance().linking.notWhitelistedCode.replace("%code%", "" + (FloodgateUtils.isBedrockPlayer(profile.getId()) ? LinkManager.genBedrockLinkNumber(profile.getId()) : LinkManager.genLinkNumber(profile.getId())))));
+                } else if (!DiscordIntegration.INSTANCE.canPlayerJoin(profile.getId())) {
                     cir.setReturnValue(net.minecraft.network.chat.Component.literal(Localization.instance().linking.notWhitelistedRole));
                 }
             } catch (IllegalStateException e) {
@@ -70,7 +68,7 @@ public class PlayerManagerMixin {
     }
 
     @Inject(at = @At(value = "TAIL"), method = "placeNewPlayer")
-    private void onPlayerJoin(Connection connection, ServerPlayer p, CommonListenerCookie commonListenerCookie, CallbackInfo ci) {
+    private void onPlayerJoin(Connection connection, ServerPlayer p, CallbackInfo ci) {
         if (DiscordIntegration.INSTANCE != null) {
             if(INSTANCE.getServerInterface().isPlayerVanish(p.getUUID())) return;
             if (LinkManager.isPlayerLinked(p.getUUID()) && LinkManager.getLink(null, p.getUUID()).settings.hideFromDiscord)

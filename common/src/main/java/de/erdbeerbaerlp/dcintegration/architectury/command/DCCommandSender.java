@@ -13,6 +13,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec2;
@@ -29,27 +30,22 @@ public class DCCommandSender implements CommandSource {
 
     public DCCommandSender(CompletableFuture<InteractionHook> cmdMsg, User user) {
         final Member member = DiscordIntegration.INSTANCE.getMemberById(user.getId());
-
-        String tag = user.getDiscriminator().equals("0000") ? user.getEffectiveName() : user.getAsTag();
-        String hoverText;
-
-        if (member != null) {
-            tag = member.getUser().getDiscriminator().equals("0000") ? member.getEffectiveName() : member.getUser().getAsTag();
-            hoverText = Localization.instance().discordUserHover
-                    .replace("%user#tag%", tag)
-                    .replace("%user%", member.getEffectiveName())
-                    .replace("%id%", member.getId());
-        } else {
-            hoverText = Localization.instance().discordUserHover
-                    .replace("%user#tag%", tag)
-                    .replace("%user%", user.getEffectiveName())
-                    .replace("%id%", user.getId());
-        }
-
-        this.name = Component.literal("@" + tag).withStyle(style ->
-                style.withHoverEvent(new HoverEvent.ShowText(Component.literal(hoverText)))
-        );
-
+        if (member != null)
+            name = Component.literal("@" + (!member.getUser().getDiscriminator().equals("0000") ? member.getUser().getAsTag() : member.getEffectiveName()))
+                    .setStyle(Style.EMPTY.withHoverEvent(
+                            new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                    Component.literal(Localization.instance().discordUserHover
+                                            .replace("%user#tag%", !member.getUser().getDiscriminator().equals("0000") ? member.getUser().getAsTag() : member.getEffectiveName())
+                                            .replace("%user%", member.getEffectiveName())
+                                            .replace("%id%", member.getId())))));
+        else
+            name = Component.literal("@" + (!user.getDiscriminator().equals("0000") ? user.getAsTag() : user.getEffectiveName()))
+                    .setStyle(Style.EMPTY.withHoverEvent(
+                            new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                    Component.literal(Localization.instance().discordUserHover
+                                            .replace("%user#tag%", !user.getDiscriminator().equals("0000") ? user.getAsTag() : user.getEffectiveName())
+                                            .replace("%user%", user.getEffectiveName())
+                                            .replace("%id%", user.getId())))));
         this.cmdMsg = cmdMsg;
     }
 
@@ -90,17 +86,7 @@ public class DCCommandSender implements CommandSource {
     }
 
     public CommandSourceStack createCommandSourceStack() {
-        return new CommandSourceStack(
-                this,
-                Vec3.ZERO,
-                Vec2.ZERO,
-                DiscordIntegrationMod.server.getLevel(ServerLevel.OVERWORLD),
-                4,
-                this.name.getString(),
-                this.name,
-                DiscordIntegrationMod.server,
-                (Entity) null
-        );
+        return new CommandSourceStack(this, Vec3.ZERO, new Vec2(0.0F, 0.0F), DiscordIntegrationMod.server.getLevel(ServerLevel.OVERWORLD), 4, this.name.getString(), this.name, DiscordIntegrationMod.server, (Entity) null);
     }
 
     @Override

@@ -3,63 +3,44 @@ package de.erdbeerbaerlp.dcintegration.architectury.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
-import com.mojang.serialization.JsonOps;
+
+import net.minecraft.core.RegistryAccess;            // present in 1.20.1 (params unused)
+import net.minecraft.core.HolderLookup;             // present in 1.20.1 (params unused)
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.ComponentSerialization;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.network.chat.Component.Serializer;
 
 public class SerializeComponentUtils {
     private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
 
-    /**
-     * Serializes a Component to a JSON string using the given registry access.
-     */
     public static String toJson(Component component, RegistryAccess registryAccess) {
-        JsonElement jsonElement = ComponentSerialization.CODEC
-                .encodeStart(registryAccess.createSerializationContext(JsonOps.INSTANCE), component)
-                .getOrThrow(JsonParseException::new);
-
-        return GSON.toJson(jsonElement);
+        return Serializer.toJson(component);
     }
 
-    /**
-     * Serializes a Component to a JSON string using the given holder lookup.
-     */
     public static String toJson(Component component, HolderLookup.Provider holderLookup) {
-        JsonElement jsonElement = ComponentSerialization.CODEC
-                .encodeStart(holderLookup.createSerializationContext(JsonOps.INSTANCE), component)
-                .getOrThrow(JsonParseException::new);
-
-        return GSON.toJson(jsonElement);
+        return Serializer.toJson(component);
     }
 
-    /**
-     * Deserializes a JSON string into a MutableComponent using the given registry access.
-     */
     public static MutableComponent fromJson(String json, RegistryAccess registryAccess) {
-        JsonElement jsonElement = JsonParser.parseString(json);
-        Component component = ComponentSerialization.CODEC
-                .parse(registryAccess.createSerializationContext(JsonOps.INSTANCE), jsonElement)
-                .getOrThrow(JsonParseException::new);
-
-        // Convert Component to MutableComponent
-        return component.copy();
+        Component c = Serializer.fromJson(json);
+        if (c == null) throw new JsonParseException("Invalid component JSON: " + json);
+        return c.copy(); // MutableComponent
     }
 
-    /**
-     * Deserializes a JSON string into a MutableComponent using the given holder lookup.
-     */
     public static MutableComponent fromJson(String json, HolderLookup.Provider holderLookup) {
-        JsonElement jsonElement = JsonParser.parseString(json);
-        Component component = ComponentSerialization.CODEC
-                .parse(holderLookup.createSerializationContext(JsonOps.INSTANCE), jsonElement)
-                .getOrThrow(JsonParseException::new);
+        Component c = Serializer.fromJson(json);
+        if (c == null) throw new JsonParseException("Invalid component JSON: " + json);
+        return c.copy();
+    }
 
-        // Convert Component to MutableComponent
-        return component.copy();
+    public static JsonElement toJsonTree(Component component) {
+        return Serializer.toJsonTree(component);
+    }
+
+    public static MutableComponent fromJsonElement(JsonElement element) {
+        Component c = Serializer.fromJson(element);
+        if (c == null) throw new JsonParseException("Invalid component JSON element");
+        return c.copy();
     }
 }

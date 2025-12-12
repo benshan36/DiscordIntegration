@@ -40,7 +40,10 @@ public class Metrics {
      */
     public Metrics(int serviceId) {
         // Get the config file
-        final Path configFile = capturedServer.get().getFile("config").resolve("bstats.json");
+        final Path configFile = capturedServer.get()
+                .getFile("config")
+                .toPath()
+                .resolve("bstats.json");
         final MetricsConfig config = readConfig(configFile);
 
         // Load the data
